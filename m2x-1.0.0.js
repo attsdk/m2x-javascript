@@ -11,7 +11,6 @@
         root.M2X = factory();
     }
 }(this, function () {
-
 /**
  * almond 0.2.6 Copyright (c) 2011-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
@@ -1070,5 +1069,6 @@ function(Client, Batches, Blueprints, Datasources, Feeds, Keys) {
 
     return M2X;
 });
+
     return require("m2x");
 }));
