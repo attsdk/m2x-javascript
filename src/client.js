@@ -2,7 +2,6 @@
 
 define(["helpers"], function(helpers) {
     var API_BASE = "http://api-m2x.att.com/v2";
-    var USER_AGENT = "M2X-Javascript/1.0.0 " + navigator.userAgent;
 
     function encodeParams(params) {
         var param, result;
