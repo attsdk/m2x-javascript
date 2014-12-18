@@ -3,34 +3,34 @@
     function M2XExample() {
         this.$statusBar = $("#status-bar span");
         this.$apiKey = $("input[name=api-key]");
-        this.$feedID = $("input[name=feed-id]");
-        this.$feedView = $("#feed-view");
+        this.$deviceID = $("input[name=device-id]");
+        this.$deviceView = $("#device-view");
         this.$streamPush = $("#stream-push");
         this.$streamView = $("#stream-view");
 
         this.bindEvents();
 
-        // Load api/feed values from localStorage (if any)
+        // Load api/device values from localStorage (if any)
         this.$apiKey.val( localStorage.getItem("api-key") || "" );
-        this.$feedID.val( localStorage.getItem("feed-id") || "" );
+        this.$deviceID.val( localStorage.getItem("device-id") || "" );
         this.onKeyChange();
-        this.onFeedChange();
+        this.ondeviceChange();
     }
 
     M2XExample.prototype.bindEvents = function() {
         // Call onKeyChange when api key input changes
         this.$apiKey.on("change", $.proxy(this, "onKeyChange"));
 
-        // Call onFeedChange when feed-id input changes
-        this.$feedID.on("change", $.proxy(this, "onFeedChange"));
+        // Call ondeviceChange when device-id input changes
+        this.$deviceID.on("change", $.proxy(this, "ondeviceChange"));
 
         // Hook this event on all buttons so that we share the check
-        // for api-key/feed-id, which is needed for all three operations
+        // for api-key/device-id, which is needed for all three operations
         $("button").on("click", $.proxy(function(ev) {
             if (! this.m2x) {
                 alert("You must type an API Key first.");
-            } else if (! this.feedID) {
-                alert("You must type a Feed ID first.");
+            } else if (! this.deviceID) {
+                alert("You must type a device ID first.");
             } else {
                 return;
             }
@@ -38,12 +38,12 @@
             ev.stopPropagation();
         }, this));
 
-        // Handler for getting feed information
-        this.$feedView.on("click", "button", $.proxy(function() {
+        // Handler for getting device information
+        this.$deviceView.on("click", "button", $.proxy(function() {
             this.setLoading(true);
 
-            this.m2x.feeds.view(this.feedID, $.proxy(function(data) {
-                $("code", this.$feedView).text(JSON.stringify(data));
+            this.m2x.devices.view(this.deviceID, $.proxy(function(data) {
+                $("code", this.$deviceView).text(JSON.stringify(data));
 
                 this.setLoading(false);
             }, this));
@@ -61,8 +61,8 @@
             } else {
                 this.setLoading(true);
 
-                this.m2x.feeds.
-                    updateStream(this.feedID, streamName, { value: value }, $.proxy(function() {
+                this.m2x.devices.
+                    updateStream(this.deviceID, streamName, { value: value }, $.proxy(function() {
 
                     this.setLoading(false);
                 }, this));
@@ -78,7 +78,7 @@
             } else {
                 this.setLoading(true);
 
-                this.m2x.feeds.streamValues(this.feedID, streamName, $.proxy(function(data) {
+                this.m2x.devices.streamValues(this.deviceID, streamName, $.proxy(function(data) {
                     $("code", this.$streamView).text(JSON.stringify(data));
 
                     this.setLoading(false);
@@ -87,9 +87,9 @@
         }, this));
     };
 
-    M2XExample.prototype.onFeedChange = function() {
-        this.feedID = this.$feedID.val();
-        localStorage.setItem("feed-id", this.feedID);
+    M2XExample.prototype.ondeviceChange = function() {
+        this.deviceID = this.$deviceID.val();
+        localStorage.setItem("device-id", this.deviceID);
     };
 
     M2XExample.prototype.onKeyChange = function() {

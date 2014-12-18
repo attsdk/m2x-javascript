@@ -13,16 +13,6 @@ define(["helpers"], function(helpers) {
         return this.client.get("/keys", cb);
     };
 
-    // Return the details of the API Key supplied
-    Keys.prototype.view = function(key, cb) {
-        return this.client.get(helpers.url("/keys/{0}", key), cb);
-    };
-
-    // Delete the supplied API Key
-    Keys.prototype.del = function(key, cb) {
-        return this.client.del(helpers.url("/keys/{0}", key), cb);
-    };
-
     // Create a new API Key
     //
     // Note that, according to the parameters sent, you can create a
@@ -34,6 +24,11 @@ define(["helpers"], function(helpers) {
             headers: { "Content-Type": "application/json" },
             params: params
         }, cb);
+    };
+
+    // Return the details of the API Key supplied
+    Keys.prototype.view = function(key, cb) {
+        return this.client.get(helpers.url("/keys/{0}", key), cb);
     };
 
     // Update API Key properties
@@ -55,6 +50,11 @@ define(["helpers"], function(helpers) {
     // start using the new key token for all subsequent requests.
     Keys.prototype.regenerate = function(key, cb) {
         return this.client.post(helpers.url("/keys/{0}/regenerate", key), cb);
+    };
+
+    // Delete the supplied API Key
+    Keys.prototype.del = function(key, cb) {
+        return this.client.del(helpers.url("/keys/{0}", key), cb);
     };
 
     return Keys;

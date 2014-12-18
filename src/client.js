@@ -1,7 +1,8 @@
 /*globals XMLHttpRequest,XDomainRequest*/
 
 define(["helpers"], function(helpers) {
-    var API_BASE = "http://api-m2x.att.com/v1";
+    var API_BASE = "http://api-m2x.att.com/v2";
+    var USER_AGENT = "M2X-Javascript/1.0.0 " + navigator.userAgent;
 
     function encodeParams(params) {
         var param, result;
@@ -55,23 +56,24 @@ define(["helpers"], function(helpers) {
 
 
     var Client = function(apiKey, apiBase) {
+        var createVerb = function(object, verb, methodName) {
+                object[methodName] = function(path, options, cb) {
+                    return this.request(verb, path, options, cb);
+                };
+            },
+            verbs, vi;
+
         this.apiKey = apiKey;
         this.apiBase = apiBase || API_BASE;
-
         this.defaultHeaders = {
             "X-M2X-KEY": this.apiKey
         };
 
-        // Define request methods by verb. We could use forEach but it wouldn't work on IE8.
-        var verbs = ['get', 'post', 'put', 'del', 'head', 'options', 'patch'], vi;
+        verbs = ["get", "post", "put", "head", "options", "patch"];
         for (vi = 0; vi < verbs.length; vi++) {
-            var verb = verbs[vi];
-            this[verb] = function(verb) {
-                return function(path, options, cb) {
-                    this.request(verb, path, options, cb);
-                };
-            }(verb);
+            createVerb(this, verbs[vi], verbs[vi]);
         }
+        createVerb(this, "delete", "del");
     };
 
     Client.prototype.request = function(verb, path, options, cb) {
@@ -85,11 +87,11 @@ define(["helpers"], function(helpers) {
 
         headers = helpers.extend(this.defaultHeaders, options.headers || {});
 
-        if (! headers["Content-Type"]) {
-            headers["Content-Type"] = "application/x-www-form-urlencoded";
-        }
-
         if (options.params) {
+            if (! headers["Content-Type"]) {
+                headers["Content-Type"] = "application/x-www-form-urlencoded";
+            }
+
             switch (headers["Content-Type"]) {
             case "application/json":
                 body = JSON.stringify(options.params);
@@ -104,7 +106,7 @@ define(["helpers"], function(helpers) {
             }
         }
 
-        request({
+        return request({
             path: this.apiBase + path,
             qs: options.qs,
             verb: verb,
