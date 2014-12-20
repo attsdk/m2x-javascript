@@ -14,14 +14,14 @@ Getting Started
 
 ## Compatibility ##
 
-Currently, the M2X Javascript client is supported on all newer browsers except IE8 and IE9.
+Currently, the M2X Javascript client is supported on all modern browsers except IE8 and IE9.
 
 ## Usage ##
 
 ### M2X Class ###
 
 The main object encapsulating all API functionality is the global variable ``M2X``.
-In order to create an M2X object you are going to need an API key, which can be either a Master Key or a key belonging to a specific device (in which case you will only be allowed to read/write to this device).
+In order to create a M2X object you will need an API key, which can be either a Master Key or a key belonging to a specific device (in which case you will only be allowed to read/write to this device).
 
 The following is a short example on how to instantiate an M2X object:
 
