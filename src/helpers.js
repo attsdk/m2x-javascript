@@ -1,6 +1,7 @@
 define(function() {
     function extend(target) {
-        var sources = [].slice.call(arguments, 1), si;
+        var sources = [].slice.call(arguments, 1);
+        var si;
         for (si = 0; si < sources.length; si++) {
             var source = sources[si], prop;
             for (prop in source) {

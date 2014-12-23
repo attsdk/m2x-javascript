@@ -32,8 +32,8 @@ var m2x = new M2X("<API-KEY>");
 The M2X object also provides a simple method for checking the API status (so if you are having connectivity issues, you can check whether the API is currently down):
 
 ```javascript
-m2x.status(function(status) {
-    console.log(status);
+m2x.status(function(response) {
+    console.log(response.json);
 });
 ```
 
@@ -41,34 +41,34 @@ An M2X object provides methods for communicating with the remote API. Methods ar
 
 - [Distributions](src/distributions.js)
   ```javascript
-  m2x.distributions.view("<DISTRIBUTION-ID>", function(distribution) {
-      console.log(distribution);
+  m2x.distributions.view("<DISTRIBUTION-ID>", function(response) {
+      console.log(response.json);
   });
 
-  m2x.distributions.list(function(distributions) {
-      console.log(distributions);
+  m2x.distributions.list(function(response) {
+      console.log(response.json);
   });
   ```
 
 - [Devices](src/devices.js)
   ```javascript
-  m2x.devices.view("<DEVICE-ID>", function(device) {
-      console.log(device);
+  m2x.devices.view("<DEVICE-ID>", function(response) {
+      console.log(response.json);
   });
 
-  m2x.devices.list(function(devices) {
-      console.log(devices);
+  m2x.devices.list(function(response) {
+      console.log(response.json);
   });
   ```
 
 - [Keys](src/keys.js)
   ```javascript
-  m2x.keys.view("<KEY-TOKEN>", function(key) {
-      console.log(key);
+  m2x.keys.view("<KEY-TOKEN>", function(response) {
+      console.log(response.json);
   });
 
-  m2x.keys.list(function(keys) {
-      console.log(keys);
+  m2x.keys.list(function(response) {
+      console.log(response.json);
   });
   ```
 

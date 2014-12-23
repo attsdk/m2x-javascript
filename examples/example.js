@@ -42,8 +42,8 @@
         this.$deviceView.on("click", "button", $.proxy(function() {
             this.setLoading(true);
 
-            this.m2x.devices.view(this.deviceID, $.proxy(function(data) {
-                $("code", this.$deviceView).text(JSON.stringify(data));
+            this.m2x.devices.view(this.deviceID, $.proxy(function(response) {
+                $("code", this.$deviceView).text(response.raw);
 
                 this.setLoading(false);
             }, this));
@@ -78,8 +78,8 @@
             } else {
                 this.setLoading(true);
 
-                this.m2x.devices.streamValues(this.deviceID, streamName, $.proxy(function(data) {
-                    $("code", this.$streamView).text(JSON.stringify(data));
+                this.m2x.devices.streamValues(this.deviceID, streamName, $.proxy(function(response) {
+                    $("code", this.$streamView).text(response.raw);
 
                     this.setLoading(false);
                 }, this));

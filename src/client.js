@@ -1,10 +1,11 @@
 /*globals XMLHttpRequest,XDomainRequest*/
 
-define(["helpers"], function(helpers) {
-    var API_BASE = "http://api-m2x.att.com/v2";
+define(["helpers", "response"], function(helpers, Response) {
+    var API_BASE = "https://api-m2x.att.com/v2";
 
     function encodeParams(params) {
-        var param, result;
+        var param;
+        var result;
 
         for (param in params) {
             var value = params[param];
@@ -40,13 +41,16 @@ define(["helpers"], function(helpers) {
             xhr.setRequestHeader(header, options.headers[header]);
         }
 
-        xhr.onerror = onError;
+        xhr.onerror = function() {
+            if (onError) {
+                onError(new Response("Can't reach the M2X server", xhr));
+            }
+        };
         xhr.onload = function() {
             if (onSuccess) {
-                var data = xhr.responseText ? JSON.parse(xhr.responseText) : {};
-                onSuccess.apply(xhr, [data]);
+                onSuccess(new Response(null, xhr));
             }
-        }
+        };
 
         xhr.send(options.body);
 
@@ -56,8 +60,8 @@ define(["helpers"], function(helpers) {
 
     var Client = function(apiKey, apiBase) {
         var createVerb = function(object, verb, methodName) {
-                object[methodName] = function(path, options, cb) {
-                    return this.request(verb, path, options, cb);
+                object[methodName] = function(path, options, callback) {
+                    return this.request(verb, path, options, callback);
                 };
             },
             verbs, vi;
@@ -75,12 +79,13 @@ define(["helpers"], function(helpers) {
         createVerb(this, "delete", "del");
     };
 
-    Client.prototype.request = function(verb, path, options, cb) {
-        var body, headers;
+    Client.prototype.request = function(verb, path, options, callback) {
+        var body;
+        var headers;
 
         if (typeof options === "function") {
             // callback was sent in place of options
-            cb = options;
+            callback = options;
             options = {};
         }
 
@@ -111,9 +116,7 @@ define(["helpers"], function(helpers) {
             verb: verb,
             headers: headers,
             body: body
-        }, cb, function() {
-            // TODO: handle errors
-        });
+        }, callback, callback);
     };
 
     return Client;

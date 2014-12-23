@@ -426,7 +426,8 @@ define("../dist/lib/almond", function(){});
 
 define('helpers',[],function() {
     function extend(target) {
-        var sources = [].slice.call(arguments, 1), si;
+        var sources = [].slice.call(arguments, 1);
+        var si;
         for (si = 0; si < sources.length; si++) {
             var source = sources[si], prop;
             for (prop in source) {
@@ -464,13 +465,61 @@ define('helpers',[],function() {
     };
 });
 
+define('response',[],function() {
+  var Response = function(error, res) {
+      this.raw = res.responseText;
+      if ("getAllResponseHeaders" in res) {
+          this.headers = res.getAllResponseHeaders();
+      } else {
+          this.headers = {};
+      }
+      this.status = res.status;
+
+      if (error) {
+          this._error = { error: this.raw };
+      } else {
+          try {
+              this.json = this.raw ? JSON.parse(this.raw) : {};
+          } catch (ex) {
+              this._error = { error: ex.toString() };
+          }
+      }
+  };
+
+  Response.prototype.error = function() {
+      if (!this._error && this.isError()) {
+          this._error = this.json || {};
+      }
+      return this._error;
+  };
+
+  Response.prototype.isError = function() {
+      return (this._error || this.isClientError() || this.isServerError());
+  };
+
+  Response.prototype.isSuccess = function() {
+      return !this.isError();
+  };
+
+  Response.prototype.isClientError = function() {
+      return this.status >= 400 && this.status < 500;
+  };
+
+  Response.prototype.isServerError = function() {
+      return this.status >= 500;
+  };
+
+  return Response;
+});
+
 /*globals XMLHttpRequest,XDomainRequest*/
 
-define('Client',["helpers"], function(helpers) {
-    var API_BASE = "http://api-m2x.att.com/v2";
+define('client',["helpers", "response"], function(helpers, Response) {
+    var API_BASE = "https://api-m2x.att.com/v2";
 
     function encodeParams(params) {
-        var param, result;
+        var param;
+        var result;
 
         for (param in params) {
             var value = params[param];
@@ -506,13 +555,16 @@ define('Client',["helpers"], function(helpers) {
             xhr.setRequestHeader(header, options.headers[header]);
         }
 
-        xhr.onerror = onError;
+        xhr.onerror = function() {
+            if (onError) {
+                onError(new Response("Can't reach the M2X server", xhr));
+            }
+        };
         xhr.onload = function() {
             if (onSuccess) {
-                var data = xhr.responseText ? JSON.parse(xhr.responseText) : {};
-                onSuccess.apply(xhr, [data]);
+                onSuccess(new Response(null, xhr));
             }
-        }
+        };
 
         xhr.send(options.body);
 
@@ -522,8 +574,8 @@ define('Client',["helpers"], function(helpers) {
 
     var Client = function(apiKey, apiBase) {
         var createVerb = function(object, verb, methodName) {
-                object[methodName] = function(path, options, cb) {
-                    return this.request(verb, path, options, cb);
+                object[methodName] = function(path, options, callback) {
+                    return this.request(verb, path, options, callback);
                 };
             },
             verbs, vi;
@@ -541,12 +593,13 @@ define('Client',["helpers"], function(helpers) {
         createVerb(this, "delete", "del");
     };
 
-    Client.prototype.request = function(verb, path, options, cb) {
-        var body, headers;
+    Client.prototype.request = function(verb, path, options, callback) {
+        var body;
+        var headers;
 
         if (typeof options === "function") {
             // callback was sent in place of options
-            cb = options;
+            callback = options;
             options = {};
         }
 
@@ -577,57 +630,52 @@ define('Client',["helpers"], function(helpers) {
             verb: verb,
             headers: headers,
             body: body
-        }, cb, function() {
-            // TODO: handle errors
-        });
+        }, callback, callback);
     };
 
     return Client;
 });
 
-define('Keys',["helpers"], function(helpers) {
+define('keys',["helpers"], function(helpers) {
     // Wrapper for AT&T M2X Keys API
     //
-    // See https://m2x.att.com/developer/documentation/keys for AT&T M2X
-    // HTTP Keys API documentation.
+    // https://m2x.att.com/developer/documentation/keys
     var Keys = function(client) {
         this.client = client;
     };
 
-    // List all the Master API Keys that belongs to the user associated
-    // with the AT&T M2X API key supplied when initializing M2X
-    Keys.prototype.list = function(cb) {
-        return this.client.get("/keys", cb);
+    // List all the Master API Keys that belongs to the authenticated user
+    //
+    // https://m2x.att.com/developer/documentation/v2/keys#List-Keys
+    Keys.prototype.list = function(callback) {
+        return this.client.get("/keys", callback);
     };
 
     // Create a new API Key
     //
-    // Note that, according to the parameters sent, you can create a
-    // Master API Key or a Feed/Stream API Key. See
-    // https://m2x.att.com/developer/documentation/keys#Create-Key for
-    // details on the parameters accepted by this method.
-    Keys.prototype.create = function(params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/keys#Create-Key
+    Keys.prototype.create = function(params, callback) {
         return this.client.post("/keys", {
             headers: { "Content-Type": "application/json" },
             params: params
-        }, cb);
+        }, callback);
     };
 
     // Return the details of the API Key supplied
-    Keys.prototype.view = function(key, cb) {
-        return this.client.get(helpers.url("/keys/{0}", key), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/keys#View-Key-Details
+    Keys.prototype.view = function(key, callback) {
+        return this.client.get(helpers.url("/keys/{0}", key), callback);
     };
 
     // Update API Key properties
     //
-    // This method accepts the same parameters as create API Key and
-    // has the same validations. Note that the Key token cannot be
-    // updated through this method.
-    Keys.prototype.update = function(key, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/keys#Update-Key
+    Keys.prototype.update = function(key, params, callback) {
         return this.client.put(helpers.url("/keys/{0}", key), {
             headers: { "Content-Type": "application/json" },
             params: params
-        }, cb);
+        }, callback);
     };
 
     // Regenerate an API Key token
@@ -635,23 +683,26 @@ define('Keys',["helpers"], function(helpers) {
     // Note that if you regenerate the key that you're using for
     // authentication then you would need to change your scripts to
     // start using the new key token for all subsequent requests.
-    Keys.prototype.regenerate = function(key, cb) {
-        return this.client.post(helpers.url("/keys/{0}/regenerate", key), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/keys#Regenerate-Key
+    Keys.prototype.regenerate = function(key, callback) {
+        return this.client.post(helpers.url("/keys/{0}/regenerate", key), callback);
     };
 
     // Delete the supplied API Key
-    Keys.prototype.del = function(key, cb) {
-        return this.client.del(helpers.url("/keys/{0}", key), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/keys#Delete-Key
+    Keys.prototype.del = function(key, callback) {
+        return this.client.del(helpers.url("/keys/{0}", key), callback);
     };
 
     return Keys;
 });
 
-define('Devices',["helpers"], function(helpers) {
-    // Wrapper for AT&T M2X Device API
-    //
-    // See https://m2x.att.com/developer/documentation/device for AT&T M2X
-    // HTTP Device API documentation.
+define('devices',["helpers"], function(helpers) {
+  // Wrapper for AT&T M2X Device API
+  //
+  // https://m2x.att.com/developer/documentation/device
     var Devices = function(client, keysAPI) {
         this.client = client;
         this.keysAPI = keysAPI;
@@ -659,117 +710,89 @@ define('Devices',["helpers"], function(helpers) {
 
     // List/search the catalog of public devices
     //
-    // The list of devices can be filtered by using one or more of the
-    // following optional parameters:
+    // This allows unauthenticated users to search Devices from other users
+    // that have been marked as public, allowing them to read public Device
+    // metadata, locations, streams list, and view each Devices' stream metadata
+    // and its values.
     //
-    // * `q` text to search, matching the name and description.
-    // * `page` the specific results page, starting by 1.
-    // * `limit` how many results per page.
-    // * `groups` a comma separated list of groups.
-    // * `modified_since` an ISO8601 timestamp, devices modified since this
-    //                    parameter will be included.
-    // * `unmodified_since` an ISO8601 timestamp, devices modified before
-    //                      this parameter will be included.
-    // * `latitude` and `longitude` for searching devices geographically.
-    // * `distance` numeric value in `distance_unit`.
-    // * `distance_unit` either `miles`, `mi` or `km`.
-    Devices.prototype.catalog = function(params, cb) {
-        return this.client.get("/devices/catalog", { qs: params || {} }, cb);
+    // https://m2x.att.com/developer/documentation/v2/device#List-Search-Public-Devices-Catalog
+    Devices.prototype.catalog = function(params, callback) {
+        return this.client.get("/devices/catalog", { qs: params || {} }, callback);
     };
 
-    // List/search all the devices that belong to the user associated
-    // with the M2X API key supplied when initializing M2X
+    // Retrieve the list of devices accessible by the authenticated API key that
+    // meet the search criteria
     //
-    // The list of devices can be filtered by using one or more of the
-    // following optional parameters:
-    //
-    // * `q` text to search, matching the name and description.
-    // * `page` the specific results page, starting by 1.
-    // * `limit` how many results per page.
-    // * `groups` a comma separated list of groups.
-    // * `visibility` either "public" or "private".
-    // * `modified_since` an ISO8601 timestamp, devices modified since this
-    //                    parameter will be included.
-    // * `unmodified_since` an ISO8601 timestamp, devices modified before
-    //                      this parameter will be included.
-    // * `latitude` and `longitude` for searching devices geographically.
-    // * `distance` numeric value in `distance_unit`.
-    // * `distance_unit` either `miles`, `mi` or `km`.
-    Devices.prototype.search = function(params, cb) {
-        return this.client.get("/devices", { qs: params || {} }, cb);
+    // https://m2x.att.com/developer/documentation/v2/device#List-Search-Devices
+    Devices.prototype.search = function(params, callback) {
+        return this.client.get("/devices", { qs: params || {} }, callback);
     };
 
-    // List all the devices that belong to the user associated with the
-    // M2X API key supplied when initializing M2X
-    Devices.prototype.list = function(cb) {
-        return this.search({}, cb);
+    // Retrieve the list of devices accessible by the authenticated API key that
+    // meet the search criteria
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#List-Search-Devices
+    Devices.prototype.list = function(callback) {
+        return this.search({}, callback);
     };
 
-    // List the user devices groups
-    Devices.prototype.groups = function(cb) {
-        return this.client.get("/devices/groups", cb);
+    // List the devices groups for the authenticated user
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#List-Device-Groups
+    Devices.prototype.groups = function(callback) {
+        return this.client.get("/devices/groups", callback);
     };
 
     // Create a new device
     //
-    // Accepts the following parameters as members of a hash:
-    //
-    // * `name` the device name
-    // * `description` a device description (optional).
-    // * `visibility` either "public" or "private".
-    // * `groups` a comma separated list of decive groups names (optional).
-    Devices.prototype.create = function(params, cb) {
-        return this.client.post("/devices", params, cb);
+    // https://m2x.att.com/developer/documentation/v2/device#Create-Device
+    Devices.prototype.create = function(params, callback) {
+        return this.client.post("/devices", params, callback);
     };
 
     // Update a device
     //
-    // Accepts the following parameters as members of a hash:
-    //
-    // * `name` the device name
-    // * `description` a device description (optional).
-    // * `visibility` either "public" or "private".
-    // * `groups` a comma separated list of decive groups names (optional).
-    Devices.prototype.update = function(id, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/device#Update-Device-Details
+    Devices.prototype.update = function(id, params, callback) {
         return this.client.put( helpers.url("/devices/{0}", id), {
             headers: { "Content-Type": "application/json" },
             params: params
-        }, cb);
+        }, callback);
     };
 
     // Return the details of the supplied device
-    Devices.prototype.view = function(id, cb) {
-        return this.client.get(helpers.url("/devices/{0}", id), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#View-Device-Details
+    Devices.prototype.view = function(id, callback) {
+        return this.client.get(helpers.url("/devices/{0}", id), callback);
     };
 
     // Return the current location of the supplied device
     //
     // Note that this method can return an empty value (response status
     // of 204) if the device has no location defined.
-    Devices.prototype.location = function(id, cb) {
-        return this.client.get(helpers.url("/devices/{0}/location", id), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Read-Device-Location
+    Devices.prototype.location = function(id, callback) {
+        return this.client.get(helpers.url("/devices/{0}/location", id), callback);
     };
 
     // Update the current location of the device
     //
-    // Accepts the following parameters as members of a hash:
-    //
-    // * `name` the location name (optional).
-    // * `latitude` location latitude.
-    // * `longitude` location longitude.
-    // * `elevation` location elevation.
-    // * `timestamp` ISO 8601 timestamp (optional, defaults to server current time).
-    Devices.prototype.updateLocation = function(id, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/device#Update-Device-Location
+    Devices.prototype.updateLocation = function(id, params, callback) {
         return this.client.put(
             helpers.url("/devices/{0}/location", id),
             { params: params },
-            cb
+            callback
         );
     };
 
     // Return a list of the associated streams for the supplied device
-    Devices.prototype.streams = function(id, cb) {
-        return this.client.get(helpers.url("/devices/{0}/streams", id), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#List-Data-Streams
+    Devices.prototype.streams = function(id, callback) {
+        return this.client.get(helpers.url("/devices/{0}/streams", id), callback);
     };
 
     // Update stream's properties
@@ -778,40 +801,33 @@ define('Devices',["helpers"], function(helpers) {
     // https://m2x.att.com/developer/documentation/device#Create-Update-Data-Stream
     // for details.
     //
-    // Accepts the following parameters as members of a hash:
-    //
-    // * `name` the location name (optional).
-    // * `latitude` location latitude.
-    // * `longitude` location longitude.
-    // * `elevation` location elevation.
-    // * `timestamp` ISO 8601 timestamp (optional, defaults to server current time).
-    Devices.prototype.updateStream = function(id, name, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/device#Create-Update-Data-Stream
+    Devices.prototype.updateStream = function(id, name, params, callback) {
         return this.client.put(
             helpers.url("/devices/{0}/streams/{1}", id, name),
             { params: params },
-            cb
+            callback
         );
     };
 
     // Set the stream value
     //
-    // Accepts the following parameters as members of a hash:
-    //
-    // * `value` the stream value
-    // * `timestamp` (optional, defaults to server current time).
-    Devices.prototype.setStreamValue = function(id, name, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/device#Update-Data-Stream-Value
+    Devices.prototype.setStreamValue = function(id, name, params, callback) {
         return this.client.put(
             helpers.url("/devices/{0}/streams/{1}/value", id, name),
             { params: params },
-            cb
+            callback
         );
     };
 
     // Return the details of the supplied stream
-    Devices.prototype.stream = function(id, name, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#View-Data-Stream
+    Devices.prototype.stream = function(id, name, callback) {
         return this.client.get(
             helpers.url("/devices/{0}/streams/{1}", id, name),
-            cb
+            callback
         );
     };
 
@@ -819,441 +835,414 @@ define('Devices',["helpers"], function(helpers) {
     // specific device, sorted in reverse chronological order (most
     // recent values first).
     //
-    // The values can be filtered by using one or more of the following
-    // optional parameters:
-    //
-    // * `start` an ISO 8601 timestamp specifying the start of the date
-    //           range to be considered (optional).
-    // * `end` an ISO 8601 timestamp specifying the end of the date
-    //         range to be considered (optional).
-    // * `min` return only values greater or equal to this value.
-    // * `max` return only values lesser or equal to this value.
-    // * `limit` maximum number of values to return.
-    Devices.prototype.streamValues = function(id, name, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/device#List-Data-Stream-Values
+    Devices.prototype.streamValues = function(id, name, params, callback) {
         var url = helpers.url("/devices/{0}/streams/{1}/values", id, name);
 
         if (typeof params === "function") {
-            cb = params;
+            callback = params;
             params = {};
         }
 
-        return this.client.get(url, { qs: params }, cb);
+        return this.client.get(url, { qs: params }, callback);
     };
 
     // Sample values from an existing stream
     //
-    // The values can be filtered by using one or more of the following
-    // parameters:
-    //
-    // * `interval`
-    // * `type` can be: "nth", "min", "max", "count", "avg", "sum". (optional,
-    //          defaults to "avg").
-    // * `start` an ISO 8601 timestamp specifying the start of the date
-    //           range to be considered (optional).
-    // * `end` an ISO 8601 timestamp specifying the end of the date
-    //         range to be considered (optional).
-    // * `min` return only values greater or equal to this value.
-    // * `max` return only values lesser or equal to this value.
-    // * `limit` maximum number of values to return.
-    Devices.prototype.sampleStreamValues = function(id, name, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/device#Data-Stream-Sampling
+    Devices.prototype.sampleStreamValues = function(id, name, params, callback) {
         return this.client.get(
             helpers.url("/devices/{0}/streams/{1}/sampling", id, name),
             { qs: params },
-            cb
+            callback
         );
     };
 
     // Return the stream stats
     //
-    // The stats can be filtered by using one or more of the following
-    // parameters:
-    //
-    // * `start` an ISO 8601 timestamp specifying the start of the date
-    //           range to be considered (optional).
-    // * `end` an ISO 8601 timestamp specifying the end of the date
-    //         range to be considered (optional).
-    // * `min` return only values greater or equal to this value.
-    // * `max` return only values lesser or equal to this value.
-    Devices.prototype.streamStats = function(id, name, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/device#Data-Stream-Stats
+    Devices.prototype.streamStats = function(id, name, params, callback) {
         return this.client.get(
             helpers.url("/devices/{0}/streams/{1}/stats", id, name),
             { qs: params },
-            cb
+            callback
         );
     };
 
     // Post timestamped values to an existing stream
     //
-    // See setStreamValue documentation on how to format values
-    Devices.prototype.postValues = function(id, name, values, cb) {
+    // https://m2x.att.com/developer/documentation/v2/device#Post-Data-Stream-Values
+    Devices.prototype.postValues = function(id, name, values, callback) {
         return this.client.post(
             helpers.url("/devices/{0}/streams/{1}/values", id, name),
             { params: { values: values } },
-            cb
+            callback
         );
     };
 
     // Delete values from a stream by a date range
     //
-    // * `from` ISO 8601 timestamp
-    // * `end` ISO 8601 timestamp
-    Devices.prototype.deleteStreamValues = function(id, name, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/device#Delete-Data-Stream-Values
+    Devices.prototype.deleteStreamValues = function(id, name, params, callback) {
         return this.del(
             helpers.url("/devices/{0}/streams/{1}/values", id, name),
             { params: params },
-            cb
+            callback
         );
     };
 
     // Delete the stream (and all its values) from the device
-    Devices.prototype.deleteStream = function(id, name, cb) {
-        return this.client.del(helpers.url("/devices/{0}/streams/{1}", id, name), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Delete-Data-Stream
+    Devices.prototype.deleteStream = function(id, name, callback) {
+        return this.client.del(helpers.url("/devices/{0}/streams/{1}", id, name), callback);
     };
 
     // Post multiple values to multiple streams
     //
     // This method allows posting multiple values to multiple streams
     // belonging to a device. All the streams should be created before
-    // posting values using this method. The `values` parameters is a
-    // hash with the following format:
+    // posting values using this method.
     //
-    //   {
-    //     "stream-name-1": [
-    //       { "timestamp": <Time in ISO8601>, "value": x },
-    //       { "value": y }
-    //     ],
-    //     "stream-name-2": [ ... ]
-    //   }
-    //
-    // If the `at` attribute is missing the the current time of the
-    // server, in UTC, will be used.
-    Devices.prototype.postMultiple = function(id, values, cb) {
+    // https://m2x.att.com/developer/documentation/v2/device#Post-Device-Updates--Multiple-Values-to-Multiple-Streams-
+    Devices.prototype.postMultiple = function(id, values, callback) {
         return this.client.post(helpers.url("/devices/{0}/updates", id), {
             headers: { "Content-Type": "application/json" },
             params: { values: values }
-        }, cb);
+        }, callback);
     };
 
     // Retrieve list of triggers associated with the specified device.
-    Devices.prototype.triggers = function(id, cb) {
-        return this.client.get(helpers.url("/devices/{0}/triggers", id), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#List-Triggers
+    Devices.prototype.triggers = function(id, callback) {
+        return this.client.get(helpers.url("/devices/{0}/triggers", id), callback);
     };
 
     // Create a new trigger associated with the specified device.
-    Devices.prototype.createTrigger = function(id, params, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Create-Trigger
+    Devices.prototype.createTrigger = function(id, params, callback) {
         return this.client.post(helpers.url("/devices/{0}/triggers", id), {
             params: params
-        }, cb);
+        }, callback);
     };
 
     // Get details of a specific trigger associated with an existing device.
-    Devices.prototype.trigger = function(id, triggerID, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#View-Trigger
+    Devices.prototype.trigger = function(id, triggerID, callback) {
         return this.client.get(
             helpers.url("/devices/{0}/triggers/{1}", id, triggerID),
-            cb
+            callback
         );
     };
 
     // Update an existing trigger associated with the specified device.
-    Devices.prototype.updateTrigger = function(id, triggerID, params, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Update-Trigger
+    Devices.prototype.updateTrigger = function(id, triggerID, params, callback) {
         return this.client.put(
             helpers.url("/devices/{0}/triggers/{1}", id, triggerID),
             { params: params },
-            cb
+            callback
         );
     };
 
     // Test the specified trigger by firing it with a fake value.
+    //
     // This method can be used by developers of client applications
     // to test the way their apps receive and handle M2X notifications.
-    Devices.prototype.testTrigger = function(id, triggerName, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Test-Trigger
+    Devices.prototype.testTrigger = function(id, triggerName, callback) {
         return this.client.post(
             helpers.url("/devices/{0}/triggers/{1}", id, triggerName),
-            cb
+            callback
         );
     };
 
     // Delete an existing trigger associated with a specific device.
-    Devices.prototype.deleteTrigger = function(id, triggerID, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Delete-Trigger
+    Devices.prototype.deleteTrigger = function(id, triggerID, callback) {
         return this.client.del(
             helpers.url("/devices/{0}/triggers/{1}", id, triggerID),
-            cb
+            callback
         );
     };
 
     // Return a list of access log to the supplied device
-    Devices.prototype.log = function(id, cb) {
-        return this.client.get(helpers.url("/devices/{0}/log", id), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#View-Request-Log
+    Devices.prototype.log = function(id, callback) {
+        return this.client.get(helpers.url("/devices/{0}/log", id), callback);
     };
 
     // Delete an existing device
-    Devices.prototype.deleteDevice = function(id, cb) {
-      return this.del(helpers.url("/devices/{0}", id), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Delete-Device
+    Devices.prototype.deleteDevice = function(id, callback) {
+        return this.del(helpers.url("/devices/{0}", id), callback);
     };
 
     // Returns a list of API keys associated with the device
-    Devices.prototype.keys = function(id, cb) {
-        return this.client.get("/keys", { qs: { device: id } }, cb);
+    Devices.prototype.keys = function(id, callback) {
+        return this.client.get("/keys", { qs: { device: id } }, callback);
     };
 
     // Creates a new API key associated to the device
     //
     // If a parameter named `stream` is supplied with a stream name, it
     // will create an API key associated with that stream only.
-    Devices.prototype.createKey = function(id, params, cb) {
-        this.keysAPI.create(helpers.extend(params, { device: id }), cb);
+    Devices.prototype.createKey = function(id, params, callback) {
+        this.keysAPI.create(helpers.extend(params, { device: id }), callback);
     };
 
     // Updates an API key properties
-    Devices.prototype.updateKey = function(id, key, params, cb) {
-        this.keysAPI.update(key, helpers.extend(params, { device: id }), cb);
+    Devices.prototype.updateKey = function(id, key, params, callback) {
+        this.keysAPI.update(key, helpers.extend(params, { device: id }), callback);
     };
 
     return Devices;
 });
 
-define('Charts',["helpers"], function(helpers) {
+define('charts',["helpers"], function(helpers) {
 
     // Wrapper for AT&T M2X Charts API
     //
-    // See https://m2x.att.com/developer/documentation/charts for AT&T M2X
-    // HTTP Charts API documentation.
+    // https://m2x.att.com/developer/documentation/charts
     var Charts = function(client) {
         this.client = client;
     };
 
     // Retrieve a list of charts that belongs to the user
     //
-    // Accepts the following parameters:
-    //
-    // * `device` a device id to filter charts by.
-    Charts.prototype.list = function(cb) {
-        return this.client.get("/charts", cb);
+    // https://m2x.att.com/developer/documentation/v2/charts#List-Charts
+    Charts.prototype.list = function(callback) {
+        return this.client.get("/charts", callback);
     };
 
     // Create a new chart
     //
-    // Requires the following parameters:
-    //
-    // * `name` the chart name.
-    // * `series` an array containing the device ids and stream names, in
-    //            the following format:
-    //            [
-    //                { device: "<device id>", stream: "<stream name>" },
-    //                { device: "<device id>", stream: "<stream name>" }
-    //            ]
-    Charts.prototype.create = function(params, cb) {
-        return this.client.post("/charts", { params: params }, cb);
+    // https://m2x.att.com/developer/documentation/v2/charts#Create-Chart
+    Charts.prototype.create = function(params, callback) {
+        return this.client.post("/charts", { params: params }, callback);
     };
 
     // Get details of a chart
-    Charts.prototype.view = function(id, cb) {
-        return this.client.get(helpers.url("/charts/{0}", id), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/charts#View-Chart-Details
+    Charts.prototype.view = function(id, callback) {
+        return this.client.get(helpers.url("/charts/{0}", id), callback);
     };
 
     // Update an existing chart
     //
-    // See `create` for parameters.
-    Charts.prototype.update = function(id, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/charts#Update-Chart
+    Charts.prototype.update = function(id, params, callback) {
         return this.client.put(
             helpers.url("/charts/{0}", id),
             { params: params },
-            cb
+            callback
         );
     };
 
     // Delete an existing chart
-    Charts.prototype.deleteChart = function(id, cb) {
-        return this.client.del(helpers.url("/charts/{0}", id), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/charts#Delete-Chart
+    Charts.prototype.deleteChart = function(id, callback) {
+        return this.client.del(helpers.url("/charts/{0}", id), callback);
     };
 
     // Render a chart into a png or svg image
     //
-    // * `format` is either "png" or "svg".
-    //
-    // Accepts the following parameters:
-    //
-    // * `start` an ISO 8601 timestamp specifying the start of the date
-    //           range to be considered (optional).
-    // * `end` an ISO 8601 timestamp specifying the end of the date
-    //         range to be considered (optional).
-    // * `width` the image width (optional, defaults to 600px).
-    // * `height` the image height (optional, defaults to 300px).
-    Charts.prototype.render = function(id, format, params, cb) {
-        return this.client.get(helpers.url("/charts/{0}.{1}", id, format), cb);
+    // https://m2x.att.com/developer/documentation/v2/charts#Render-Chart
+    Charts.prototype.render = function(id, format, params, callback) {
+        return this.client.get(helpers.url("/charts/{0}.{1}", id, format), callback);
     };
 
     return Charts;
 });
 
-define('Distributions',["helpers"], function(helpers) {
+define('distributions',["helpers"], function(helpers) {
     // Wrapper for AT&T M2X Distribution API
     //
-    // See https://m2x.att.com/developer/documentation/device for AT&T M2X
-    // HTTP Distribution API documentation.
+    // https://m2x.att.com/developer/documentation/distribution
     var Distributions = function(client) {
         this.client = client;
     };
 
     // Retrieve a list of device distributions
-    Distributions.prototype.list = function(params, cb) {
-        return this.client.get("/distributions", { qs: params || {} }, cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#List-Distributions
+    Distributions.prototype.list = function(params, callback) {
+        return this.client.get("/distributions", { qs: params || {} }, callback);
     };
 
     // Create a new device distribution
     //
-    // Accepts the following parameters:
-    //
-    // * `name` the device distribution name.
-    // * `description` the device distribution description (optional).
-    // * `visibility` either "public" or "private".
-    // * `base_device` the id of the device to be used as the device template
-    //                 for this distribution.
-    Distributions.prototype.create = function(params, cb) {
-        return this.client.post("/distributions", { params: params }, cb);
+    // https://m2x.att.com/developer/documentation/v2/distribution#Create-Distribution
+    Distributions.prototype.create = function(params, callback) {
+        return this.client.post("/distributions", { params: params }, callback);
     };
 
-
     // Retrieve information about an existing device distribution
-    Distributions.prototype.view = function(id, cb) {
-        return this.client.get(helpers.url("/distributions/{0}", id), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#View-Distribution-Details
+    Distributions.prototype.view = function(id, callback) {
+        return this.client.get(helpers.url("/distributions/{0}", id), callback);
     };
 
     // Update an existing device distribution
     //
-    // Accepts the following parameters:
-    //
-    // * `name` device distribution name.
-    // * `description` a description for the device distribution.
-    // * `visibility` either "public" or "private".
-    Distributions.prototype.update = function(id, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/distribution#Update-Distribution-Details
+    Distributions.prototype.update = function(id, params, callback) {
         return this.client.put(
             helpers.url("/distributions/{0}", id),
             { params: params },
-            cb
+            callback
         );
     };
 
-
     // Retrieve a list of devices added to the a device distribution
-    Distributions.prototype.devices = function(id, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#List-Devices-from-an-existing-Distribution
+    Distributions.prototype.devices = function(id, callback) {
         return this.client.get(
             helpers.url("/distributions/{0}/devices", id),
-            cb
+            callback
         );
     };
 
     // Add a new device to an existing device distribution
-    Distributions.prototype.addDevice = function(id, serial, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Add-Device-to-an-existing-Distribution
+    Distributions.prototype.addDevice = function(id, serial, callback) {
         return this.client.post(helpers.url("/distributions/{0}/devices", id), {
             headers: { "Content-Type": "application/json" },
             params: { serial: serial }
-        }, cb);
+        }, callback);
     };
 
     // Delete an existing device distribution
-    Distributions.prototype.deleteDistribution = function(id, cb) {
-        return this.client.del(helpers.url("/distributions/{0}", id), cb);
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Delete-Distribution
+    Distributions.prototype.deleteDistribution = function(id, callback) {
+        return this.client.del(helpers.url("/distributions/{0}", id), callback);
     };
 
     // Retrieve a list of data streams associated with the distribution
-    Distributions.prototype.dataStreams = function(id, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#List-Data-Streams
+    Distributions.prototype.dataStreams = function(id, callback) {
         return this.client.get(
             helpers.url("/distributions/{0}/streams", id),
-            cb
+            callback
         );
     };
 
     // Create/Update a data stream associated with the distribution
     //
-    // Accepts the following parametrs:
-    //
-    // * `unit` the unit used to measure the stream values.
-    // * `type` the stream type, either "numeric" or "alphanumeric", only
-    //          for new streams (optional, "numeric" by default).
-    Distributions.prototype.updateDataStream = function(id, name, params, cb) {
+    // https://m2x.att.com/developer/documentation/v2/distribution#Create-Update-Data-Stream
+    Distributions.prototype.updateDataStream = function(id, name, params, callback) {
         return this.client.put(
             helpers.url("/distributions/{0}/streams/{1}", id, name),
             {
                 headers: { "Content-Type": "application/json" },
                 params: params
             },
-            cb
+            callback
         );
     };
 
-
     // View information about a stream associated to the distribution
-    Distributions.prototype.dataStream = function(id, name, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#View-Data-Stream
+    Distributions.prototype.dataStream = function(id, name, callback) {
         return this.client.get(
             helpers.url("/distributions/{0}/streams/{1}", id, name),
-            cb
+            callback
         );
     };
 
     // Delete an existing data stream associated to distribution
-    Distributions.prototype.deleteDataStream = function(id, name, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Delete-Data-Stream
+    Distributions.prototype.deleteDataStream = function(id, name, callback) {
         return this.client.del(
             helpers.url("/distributions/{0}/streams/{1}", id, name),
-            cb
+            callback
         );
     };
 
     // Retrieve list of triggers associated with the distribution
-    Distributions.prototype.triggers = function(id, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#List-Triggers
+    Distributions.prototype.triggers = function(id, callback) {
         return this.client.get(
             helpers.url("/distributions/{0}/triggers", id),
-            cb
+            callback
         );
     };
 
     // Create a new trigger associated with the distribution
-    Distributions.prototype.createTrigger = function(id, params, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Create-Trigger
+    Distributions.prototype.createTrigger = function(id, params, callback) {
         return this.client.post(
             helpers.url("/distributions/{0}/triggers", id),
             { params: params },
-            cb
+            callback
         );
     };
 
     // Retrieve information about a trigger associated to a distribution
-    Distributions.prototype.trigger = function(id, triggerId, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#View-Trigger
+    Distributions.prototype.trigger = function(id, triggerId, callback) {
         return this.client.get(
             helpers.url("/distributions/{0}/triggers/{1}", id, triggerId),
-            cb
+            callback
         );
     };
 
     // Update an existing trigger associated with the distribution
-    Distributions.prototype.updateTrigger = function(id, triggerId, params, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Update-Trigger
+    Distributions.prototype.updateTrigger = function(id, triggerId, params, callback) {
         return this.client.put(
             helpers.url("/distributions/{0}/triggers/{1}", id, triggerId),
             { params: params },
-            cb
+            callback
         );
     };
 
     // Test a trigger by firing a fake value
-    Distributions.prototype.testTrigger = function(id, triggerId, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Test-Trigger
+    Distributions.prototype.testTrigger = function(id, triggerId, callback) {
         return this.client.post(
             helpers.url("/distributions/{0}/triggers/{1}/test", id, triggerId),
             { params: params },
-            cb
+            callback
         );
     };
 
     // Delete a trigger associated to the distribution
-    Distributions.prototype.deleteTrigger = function(id, triggerId, cb) {
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Delete-Trigger
+    Distributions.prototype.deleteTrigger = function(id, triggerId, callback) {
         return this.client.del(
             helpers.url("/distributions/{0}/triggers/{1}", id, triggerId),
-            cb
+            callback
         );
     };
 
     return Distributions;
 });
 
-define('m2x',["Client", "Keys", "Devices", "Charts", "Distributions"],
+define('m2x',["client", "keys", "devices", "charts", "distributions"],
 function(Client, Keys, Devices, Charts, Distributions) {
     var M2X = function(apiKey, apiBase) {
         this.client = new Client(apiKey, apiBase);
@@ -1264,8 +1253,8 @@ function(Client, Keys, Devices, Charts, Distributions) {
         this.distributions = new Distributions(this.client);
     };
 
-    M2X.prototype.status = function(cb) {
-        return this.client.get("/status", cb);
+    M2X.prototype.status = function(callback) {
+        return this.client.get("/status", callback);
     };
 
     return M2X;
