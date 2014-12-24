@@ -43,7 +43,10 @@ define(["helpers", "response"], function(helpers, Response) {
 
         xhr.onerror = function() {
             if (onError) {
-                onError(new Response("Can't reach the M2X server", xhr));
+                onError(new Response(
+                    "Network error. Please check your internet connection.",
+                    xhr
+                ));
             }
         };
         xhr.onload = function() {
