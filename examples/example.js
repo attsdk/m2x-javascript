@@ -17,6 +17,31 @@
         this.ondeviceChange();
     }
 
+    M2XExample.prototype.handleError = function(error) {
+        var text = error.message;
+
+        if (error.responseJSON) {
+            console.log(error);
+            text = JSON.stringify(error.responseJSON);
+        } else {
+            text = error.message;
+        }
+
+        this.setLoading(false, text);
+    };
+
+    M2XExample.prototype.onReceiveDeviceDetails = function(data) {
+        $("code", this.$deviceView).text(JSON.stringify(data));
+
+        this.setLoading(false);
+    };
+
+    M2XExample.prototype.onReceiveStreamValues = function(data) {
+        $("code", this.$streamView).text(JSON.stringify(data));
+
+        this.setLoading(false);
+    };
+
     M2XExample.prototype.bindEvents = function() {
         // Call onKeyChange when api key input changes
         this.$apiKey.on("change", $.proxy(this, "onKeyChange"));
@@ -42,17 +67,15 @@
         this.$deviceView.on("click", "button", $.proxy(function() {
             this.setLoading(true);
 
-            this.m2x.devices.view(this.deviceID, $.proxy(function(response) {
-                $("code", this.$deviceView).text(response.raw);
-
-                this.setLoading(false);
-            }, this));
+            this.m2x.devices.view(this.deviceID,
+                $.proxy(this, "onReceiveDeviceDetails"),
+                $.proxy(this, "handleError")
+            );
         }, this));
 
         // Handler for pushing values to a data stream
         this.$streamPush.on("click", "button", $.proxy(function() {
             var streamName = $("input[name=stream-name]", this.$streamPush).val();
-            var value = $("input[name=stream-value]", this.$streamPush).val();
 
             if (! streamName) {
                 alert("You must type an Stream name first.");
@@ -61,11 +84,10 @@
             } else {
                 this.setLoading(true);
 
-                this.m2x.devices.
-                    updateStream(this.deviceID, streamName, { value: value }, $.proxy(function() {
-
-                    this.setLoading(false);
-                }, this));
+                this.m2x.devices.setStreamValue(this.deviceID, streamName, { value: value },
+                    $.proxy(function() { this.setLoading(false); }, this),
+                    $.proxy(this, "handleError")
+                );
             }
         }, this));
 
@@ -78,11 +100,10 @@
             } else {
                 this.setLoading(true);
 
-                this.m2x.devices.streamValues(this.deviceID, streamName, $.proxy(function(response) {
-                    $("code", this.$streamView).text(response.raw);
-
-                    this.setLoading(false);
-                }, this));
+                this.m2x.devices.streamValues(this.deviceID, streamName,
+                    $.proxy(this, "onReceiveStreamValues"),
+                    $.proxy(this, "handleError")
+                );
             }
         }, this));
     };
@@ -107,11 +128,15 @@
         localStorage.setItem("api-key", key);
     };
 
-    M2XExample.prototype.setLoading = function(enabled) {
+    M2XExample.prototype.setLoading = function(enabled, error) {
         if (enabled) {
             this.$statusBar.text("Loading...");
         } else {
-            this.$statusBar.text("Done!");
+            if (error) {
+                this.$statusBar.text("Error (" + error + ")");
+            } else {
+                this.$statusBar.text("Done!");
+            }
         }
     };
 

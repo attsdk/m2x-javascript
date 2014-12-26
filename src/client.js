@@ -20,6 +20,7 @@ define(["helpers", "response"], function(helpers, Response) {
         var xhr = new XMLHttpRequest();
         var querystring = encodeParams(options.qs);
         var path = querystring ? options.path + "?" + querystring : options.path;
+        var response;
 
         if ("withCredentials" in xhr) {
             // Check if the XMLHttpRequest object has a "withCredentials" property.
@@ -43,15 +44,26 @@ define(["helpers", "response"], function(helpers, Response) {
 
         xhr.onerror = function() {
             if (onError) {
-                onError(new Response(
-                    "Network error. Please check your internet connection.",
-                    xhr
-                ));
+                response = new Response(xhr);
+
+                onError(response.error());
             }
         };
         xhr.onload = function() {
-            if (onSuccess) {
-                onSuccess(new Response(null, xhr));
+            var response;
+
+            if (!onSuccess) {
+                return;
+            }
+
+            response = new Response(xhr);
+
+            if (response.isError()) {
+                if (onError) {
+                    onError(response.error());
+                }
+            } else {
+                onSuccess(response.json);
             }
         };
 
@@ -63,8 +75,8 @@ define(["helpers", "response"], function(helpers, Response) {
 
     var Client = function(apiKey, apiBase) {
         var createVerb = function(object, verb, methodName) {
-                object[methodName] = function(path, options, callback) {
-                    return this.request(verb, path, options, callback);
+                object[methodName] = function(path, options, callback, errorCallback) {
+                    return this.request(verb, path, options, callback, errorCallback);
                 };
             },
             verbs, vi;
@@ -82,12 +94,13 @@ define(["helpers", "response"], function(helpers, Response) {
         createVerb(this, "delete", "del");
     };
 
-    Client.prototype.request = function(verb, path, options, callback) {
+    Client.prototype.request = function(verb, path, options, callback, errorCallback) {
         var body;
         var headers;
 
         if (typeof options === "function") {
             // callback was sent in place of options
+            errorCallback = callback;
             callback = options;
             options = {};
         }
@@ -119,7 +132,7 @@ define(["helpers", "response"], function(helpers, Response) {
             verb: verb,
             headers: headers,
             body: body
-        }, callback, callback);
+        }, callback, errorCallback);
     };
 
     return Client;

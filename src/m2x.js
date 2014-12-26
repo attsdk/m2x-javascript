@@ -9,8 +9,8 @@ function(Client, Keys, Devices, Charts, Distributions) {
         this.distributions = new Distributions(this.client);
     };
 
-    M2X.prototype.status = function(callback) {
-        return this.client.get("/status", callback);
+    M2X.prototype.status = function(callback, errorCallback) {
+        return this.client.get("/status", callback, errorCallback);
     };
 
     return M2X;

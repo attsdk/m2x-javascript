@@ -32,8 +32,18 @@ var m2x = new M2X("<API-KEY>");
 The M2X object also provides a simple method for checking the API status (so if you are having connectivity issues, you can check whether the API is currently down):
 
 ```javascript
-m2x.status(function(response) {
-    console.log(response.json);
+m2x.status(function(data) {
+    console.log(data);
+});
+```
+
+Every method receives an extra callback for handling errors, it will be called if an error occurs with relevant information:
+
+```javascript
+m2x.status(function(data) {
+    console.log(data);
+}, function(error) {
+    console.log("Oops, the API cannot be reached: ", error);
 });
 ```
 
@@ -41,39 +51,45 @@ An M2X object provides methods for communicating with the remote API. Methods ar
 
 - [Distributions](src/distributions.js)
   ```javascript
-  m2x.distributions.view("<DISTRIBUTION-ID>", function(response) {
-      console.log(response.json);
+  m2x.distributions.view("<DISTRIBUTION-ID>", function(distribution) {
+      console.log(distribution);
+  }, function(error) {
+      if (error.statusCode === 404) {
+          console.log("The distribution does not exist.");
+      } else {
+          // Something else happened, let the user know.
+          console.log(error);
+      }
   });
 
-  m2x.distributions.list(function(response) {
-      console.log(response.json);
-  });
+  m2x.distributions.list(function(distributions) {
+      console.log(distributions);
+  }, function(error) { console.log(error); });
   ```
 
 - [Devices](src/devices.js)
   ```javascript
-  m2x.devices.view("<DEVICE-ID>", function(response) {
-      console.log(response.json);
-  });
+  m2x.devices.view("<DEVICE-ID>", function(device) {
+      console.log(device);
+  }, function(error) { console.log(error); });
 
-  m2x.devices.list(function(response) {
-      console.log(response.json);
-  });
+  m2x.devices.list(function(devices) {
+      console.log(devices);
+  }, function(error) { console.log(error); });
   ```
 
 - [Keys](src/keys.js)
   ```javascript
-  m2x.keys.view("<KEY-TOKEN>", function(response) {
-      console.log(response.json);
-  });
+  m2x.keys.view("<KEY-TOKEN>", function(key) {
+      console.log(key);
+  }, function(error) { console.log(error); });
 
-  m2x.keys.list(function(response) {
-      console.log(response.json);
-  });
+  m2x.keys.list(function(keys) {
+      console.log(keys);
+  }, function(error) { console.log(error); });
   ```
 
 Refer to the documentation on each class for further usage instructions.
-
 
 ## Versioning
 
