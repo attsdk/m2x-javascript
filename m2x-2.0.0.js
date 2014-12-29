@@ -484,7 +484,7 @@ define('response',[],function() {
 
   Response.prototype.error = function() {
       if (!this._error && this.isError()) {
-          if (this.status === 0) {
+          if (this.status === 0) { // The request could not be completed.
               this._error = new Error( "Can't reach the M2X API");
           } else {
               this._error = new Error(this.json && this.json.message);
