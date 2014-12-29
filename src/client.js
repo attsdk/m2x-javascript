@@ -1,10 +1,11 @@
 /*globals XMLHttpRequest,XDomainRequest*/
 
-define(["helpers"], function(helpers) {
-    var API_BASE = "http://api-m2x.att.com/v1";
+define(["helpers", "response"], function(helpers, Response) {
+    var API_BASE = "https://api-m2x.att.com/v2";
 
     function encodeParams(params) {
-        var param, result;
+        var param;
+        var result;
 
         for (param in params) {
             var value = params[param];
@@ -19,6 +20,7 @@ define(["helpers"], function(helpers) {
         var xhr = new XMLHttpRequest();
         var querystring = encodeParams(options.qs);
         var path = querystring ? options.path + "?" + querystring : options.path;
+        var response;
 
         if ("withCredentials" in xhr) {
             // Check if the XMLHttpRequest object has a "withCredentials" property.
@@ -40,13 +42,30 @@ define(["helpers"], function(helpers) {
             xhr.setRequestHeader(header, options.headers[header]);
         }
 
-        xhr.onerror = onError;
-        xhr.onload = function() {
-            if (onSuccess) {
-                var data = xhr.responseText ? JSON.parse(xhr.responseText) : {};
-                onSuccess.apply(xhr, [data]);
+        xhr.onerror = function() {
+            if (onError) {
+                response = new Response(xhr);
+
+                onError(response.error());
             }
-        }
+        };
+        xhr.onload = function() {
+            var response;
+
+            if (!onSuccess) {
+                return;
+            }
+
+            response = new Response(xhr);
+
+            if (response.isError()) {
+                if (onError) {
+                    onError(response.error());
+                }
+            } else {
+                onSuccess(response.json);
+            }
+        };
 
         xhr.send(options.body);
 
@@ -55,41 +74,44 @@ define(["helpers"], function(helpers) {
 
 
     var Client = function(apiKey, apiBase) {
+        var createVerb = function(object, verb, methodName) {
+                object[methodName] = function(path, options, callback, errorCallback) {
+                    return this.request(verb, path, options, callback, errorCallback);
+                };
+            },
+            verbs, vi;
+
         this.apiKey = apiKey;
         this.apiBase = apiBase || API_BASE;
-
         this.defaultHeaders = {
             "X-M2X-KEY": this.apiKey
         };
 
-        // Define request methods by verb. We could use forEach but it wouldn't work on IE8.
-        var verbs = ['get', 'post', 'put', 'del', 'head', 'options', 'patch'], vi;
+        verbs = ["get", "post", "put", "head", "options", "patch"];
         for (vi = 0; vi < verbs.length; vi++) {
-            var verb = verbs[vi];
-            this[verb] = function(verb) {
-                return function(path, options, cb) {
-                    this.request(verb, path, options, cb);
-                };
-            }(verb);
+            createVerb(this, verbs[vi], verbs[vi]);
         }
+        createVerb(this, "delete", "del");
     };
 
-    Client.prototype.request = function(verb, path, options, cb) {
-        var body, headers;
+    Client.prototype.request = function(verb, path, options, callback, errorCallback) {
+        var body;
+        var headers;
 
         if (typeof options === "function") {
             // callback was sent in place of options
-            cb = options;
+            errorCallback = callback;
+            callback = options;
             options = {};
         }
 
         headers = helpers.extend(this.defaultHeaders, options.headers || {});
 
-        if (! headers["Content-Type"]) {
-            headers["Content-Type"] = "application/x-www-form-urlencoded";
-        }
-
         if (options.params) {
+            if (! headers["Content-Type"]) {
+                headers["Content-Type"] = "application/x-www-form-urlencoded";
+            }
+
             switch (headers["Content-Type"]) {
             case "application/json":
                 body = JSON.stringify(options.params);
@@ -104,15 +126,13 @@ define(["helpers"], function(helpers) {
             }
         }
 
-        request({
+        return request({
             path: this.apiBase + path,
             qs: options.qs,
             verb: verb,
             headers: headers,
             body: body
-        }, cb, function() {
-            // TODO: handle errors
-        });
+        }, callback, errorCallback);
     };
 
     return Client;

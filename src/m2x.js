@@ -1,17 +1,16 @@
-define(["Client", "Batches", "Blueprints", "Datasources", "Feeds", "Keys"],
-function(Client, Batches, Blueprints, Datasources, Feeds, Keys) {
+define(["client", "keys", "devices", "charts", "distributions"],
+function(Client, Keys, Devices, Charts, Distributions) {
     var M2X = function(apiKey, apiBase) {
         this.client = new Client(apiKey, apiBase);
 
-        this.batches = new Batches(this.client);
-        this.blueprints = new Blueprints(this.client);
-        this.datasources = new Datasources(this.client);
-        this.feeds = new Feeds(this.client);
         this.keys = new Keys(this.client);
+        this.devices = new Devices(this.client, this.keys);
+        this.charts = new Charts(this.client);
+        this.distributions = new Distributions(this.client);
     };
 
-    M2X.prototype.status = function(cb) {
-        return this.client.get("/status", cb);
+    M2X.prototype.status = function(callback, errorCallback) {
+        return this.client.get("/status", callback, errorCallback);
     };
 
     return M2X;
