@@ -76,6 +76,7 @@
         // Handler for pushing values to a data stream
         this.$streamPush.on("click", "button", $.proxy(function() {
             var streamName = $("input[name=stream-name]", this.$streamPush).val();
+            var value = $("input[name=stream-value]", this.$streamPush).val();
 
             if (! streamName) {
                 alert("You must type an Stream name first.");
