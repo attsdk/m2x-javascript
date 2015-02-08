@@ -738,6 +738,11 @@ define('devices',["helpers"], function(helpers) {
     //
     // https://m2x.att.com/developer/documentation/v2/device#List-Search-Public-Devices-Catalog
     Devices.prototype.catalog = function(params, callback, errorCallback) {
+        if (typeof params === "function") {
+            callback = params;
+            errorCallback = callback;
+            params = {};
+        }
         return this.client.get("/devices/catalog", { qs: params || {} }, callback, errorCallback);
     };
 
@@ -1099,6 +1104,11 @@ define('distributions',["helpers"], function(helpers) {
     //
     // https://m2x.att.com/developer/documentation/v2/distribution#List-Distributions
     Distributions.prototype.list = function(params, callback, errorCallback) {
+        if (typeof params === "function") {
+            callback = params;
+            errorCallback = callback;
+            params = {};
+        }
         return this.client.get("/distributions", { qs: params || {} }, callback, errorCallback);
     };
 
@@ -1243,7 +1253,7 @@ define('distributions',["helpers"], function(helpers) {
     // Test a trigger by firing a fake value
     //
     // https://m2x.att.com/developer/documentation/v2/distribution#Test-Trigger
-    Distributions.prototype.testTrigger = function(id, triggerId, callback, errorCallback) {
+    Distributions.prototype.testTrigger = function(id, triggerId, params, callback, errorCallback) {
         return this.client.post(
             helpers.url("/distributions/{0}/triggers/{1}/test", id, triggerId),
             { params: params },
