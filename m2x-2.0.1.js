@@ -984,7 +984,7 @@ define('devices',["helpers"], function(helpers) {
     // https://m2x.att.com/developer/documentation/v2/device#Test-Trigger
     Devices.prototype.testTrigger = function(id, triggerName, callback, errorCallback) {
         return this.client.post(
-            helpers.url("/devices/{0}/triggers/{1}", id, triggerName),
+            helpers.url("/devices/{0}/triggers/{1}/test", id, triggerName),
             callback, errorCallback
         );
     };
