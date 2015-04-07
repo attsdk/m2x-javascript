@@ -762,11 +762,11 @@ define('devices',["helpers"], function(helpers) {
         return this.search({}, callback, errorCallback);
     };
 
-    // List the devices groups for the authenticated user
+    // List the devices tags for the authenticated user
     //
-    // https://m2x.att.com/developer/documentation/v2/device#List-Device-Groups
-    Devices.prototype.groups = function(callback, errorCallback) {
-        return this.client.get("/devices/groups", callback, errorCallback);
+    // https://m2x.att.com/developer/documentation/v2/device#List-Device-Tags
+    Devices.prototype.tags = function(callback, errorCallback) {
+        return this.client.get("/devices/tags", callback, errorCallback);
     };
 
     // Create a new device
