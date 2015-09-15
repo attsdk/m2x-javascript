@@ -51,7 +51,7 @@ define(["helpers"], function(helpers) {
     //
     // https://m2x.att.com/developer/documentation/v2/device#Create-Device
     Devices.prototype.create = function(params, callback, errorCallback) {
-        return this.client.post("/devices", params, callback, errorCallback);
+        return this.client.post("/devices", { params: params }, callback, errorCallback);
     };
 
     // Update a device
