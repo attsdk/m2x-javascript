@@ -78,8 +78,7 @@ define(["helpers", "response"], function(helpers, Response) {
                 object[methodName] = function(path, options, callback, errorCallback) {
                     return this.request(verb, path, options, callback, errorCallback);
                 };
-            },
-            verbs, vi;
+        };
 
         this.apiKey = apiKey;
         this.apiBase = apiBase || API_BASE;
@@ -87,8 +86,8 @@ define(["helpers", "response"], function(helpers, Response) {
             "X-M2X-KEY": this.apiKey
         };
 
-        verbs = ["get", "post", "put", "head", "options", "patch"];
-        for (vi = 0; vi < verbs.length; vi++) {
+        var verbs = ["get", "post", "put", "head", "options", "patch"];
+        for (var vi = 0; vi < verbs.length; vi++) {
             createVerb(this, verbs[vi], verbs[vi]);
         }
         createVerb(this, "delete", "del");
