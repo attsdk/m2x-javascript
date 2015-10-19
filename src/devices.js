@@ -191,6 +191,21 @@ define(["helpers"], function(helpers) {
         return this.client.get(url, { qs: params }, callback, errorCallback);
     };
 
+    // Search Values from all Data Streams of a Device
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Search-Values-from-all-Data-Streams-of-a-Device
+    Devices.prototype.valuesSearch = function(id, params, callback, errorCallback) {
+        return this.client.post(
+            helpers.url("/devices/{0}/values/search", id),
+            {
+                headers: { "Content-Type": "application/json" },
+                params:  params
+            },
+            callback,
+            errorCallback
+        );
+    };
+
     // Post timestamped values to an existing stream
     //
     // https://m2x.att.com/developer/documentation/v2/device#Post-Data-Stream-Values
