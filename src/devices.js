@@ -27,17 +27,19 @@ define(["helpers"], function(helpers) {
     // Retrieve the list of devices accessible by the authenticated API key that
     // meet the search criteria
     //
-    // https://m2x.att.com/developer/documentation/v2/device#List-Search-Devices
+    // https://m2x.att.com/developer/documentation/v2/device#Search-Devices
     Devices.prototype.search = function(params, callback, errorCallback) {
-        return this.client.get("/devices", { qs: params || {} }, callback, errorCallback);
+        return this.client.post("/devices/search", {
+            headers: { "Content-Type": "application/json" },
+            params:  params || {}
+        }, callback, errorCallback);
     };
 
-    // Retrieve the list of devices accessible by the authenticated API key that
-    // meet the search criteria
+    // Retrieve the list of devices accessible by the authenticated API key
     //
-    // https://m2x.att.com/developer/documentation/v2/device#List-Search-Devices
-    Devices.prototype.list = function(callback, errorCallback) {
-        return this.search({}, callback, errorCallback);
+    // https://m2x.att.com/developer/documentation/v2/device#List-Devices
+    Devices.prototype.list = function(params, callback, errorCallback) {
+        return this.client.get("/devices", { qs: params || {} }, callback, errorCallback);
     };
 
     // List the devices tags for the authenticated user
