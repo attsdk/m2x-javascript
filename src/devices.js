@@ -176,6 +176,21 @@ define(["helpers"], function(helpers) {
         );
     };
 
+    // List values from all data stream associated with a specific device
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#List-Values-from-all-Data-Streams-of-a-Device
+    Devices.prototype.values = function(id, params, callback, errorCallback) {
+        var url = helpers.url("/devices/{0}/values", id);
+
+        if (typeof params === "function") {
+            errorCallback = callback;
+            callback = params;
+            params = {};
+        }
+
+        return this.client.get(url, { qs: params }, callback, errorCallback);
+    };
+
     // Post timestamped values to an existing stream
     //
     // https://m2x.att.com/developer/documentation/v2/device#Post-Data-Stream-Values
