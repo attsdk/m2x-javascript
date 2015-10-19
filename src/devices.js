@@ -219,66 +219,6 @@ define(["helpers"], function(helpers) {
         }, callback, errorCallback);
     };
 
-    // Retrieve list of triggers associated with the specified device.
-    //
-    // https://m2x.att.com/developer/documentation/v2/device#List-Triggers
-    Devices.prototype.triggers = function(id, callback, errorCallback) {
-        return this.client.get(helpers.url("/devices/{0}/triggers", id), callback, errorCallback);
-    };
-
-    // Create a new trigger associated with the specified device.
-    //
-    // https://m2x.att.com/developer/documentation/v2/device#Create-Trigger
-    Devices.prototype.createTrigger = function(id, params, callback, errorCallback) {
-        return this.client.post(helpers.url("/devices/{0}/triggers", id), {
-            params: params
-        }, callback, errorCallback);
-    };
-
-    // Get details of a specific trigger associated with an existing device.
-    //
-    // https://m2x.att.com/developer/documentation/v2/device#View-Trigger
-    Devices.prototype.trigger = function(id, triggerID, callback, errorCallback) {
-        return this.client.get(
-            helpers.url("/devices/{0}/triggers/{1}", id, triggerID),
-            callback, errorCallback
-        );
-    };
-
-    // Update an existing trigger associated with the specified device.
-    //
-    // https://m2x.att.com/developer/documentation/v2/device#Update-Trigger
-    Devices.prototype.updateTrigger = function(id, triggerID, params, callback, errorCallback) {
-        return this.client.put(
-            helpers.url("/devices/{0}/triggers/{1}", id, triggerID),
-            { params: params },
-            callback, errorCallback
-        );
-    };
-
-    // Test the specified trigger by firing it with a fake value.
-    //
-    // This method can be used by developers of client applications
-    // to test the way their apps receive and handle M2X notifications.
-    //
-    // https://m2x.att.com/developer/documentation/v2/device#Test-Trigger
-    Devices.prototype.testTrigger = function(id, triggerName, callback, errorCallback) {
-        return this.client.post(
-            helpers.url("/devices/{0}/triggers/{1}/test", id, triggerName),
-            callback, errorCallback
-        );
-    };
-
-    // Delete an existing trigger associated with a specific device.
-    //
-    // https://m2x.att.com/developer/documentation/v2/device#Delete-Trigger
-    Devices.prototype.deleteTrigger = function(id, triggerID, callback, errorCallback) {
-        return this.client.del(
-            helpers.url("/devices/{0}/triggers/{1}", id, triggerID),
-            callback, errorCallback
-        );
-    };
-
     // Return a list of access log to the supplied device
     //
     // https://m2x.att.com/developer/documentation/v2/device#View-Request-Log
