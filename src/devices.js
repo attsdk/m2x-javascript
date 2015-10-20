@@ -206,6 +206,24 @@ define(["helpers"], function(helpers) {
         );
     };
 
+    // Export Values from all Data Streams of a Device
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Export-Values-from-all-Data-Streams-of-a-Device
+    Devices.prototype.valuesExport = function(id, params, callback, errorCallback) {
+        if (typeof params === "function") {
+            errorCallback = callback;
+            callback = params;
+            params = {};
+        }
+
+        return this.client.get(
+            helpers.url("/devices/{0}/values/export.csv", id),
+            { qs: params },
+            callback,
+            errorCallback
+        );
+    };
+
     // Post timestamped values to an existing stream
     //
     // https://m2x.att.com/developer/documentation/v2/device#Post-Data-Stream-Values
