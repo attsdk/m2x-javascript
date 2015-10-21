@@ -83,6 +83,10 @@ An M2X object provides methods for communicating with the remote API. Methods ar
   m2x.devices.create({name: "device name", visibility: "private"}, function(device) {
       console.log(device);
   }, function(error) { console.log(error); });
+
+  var xhr = m2x.devices.valuesExport("<DEVICE-ID>", {streams: "<STREAM-ID>"}, function() {
+      console.log("Job Location", xhr.getResponseHeader("Location"))
+  });
   ```
 
 - [Keys](src/keys.js)
