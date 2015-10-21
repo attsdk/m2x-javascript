@@ -253,17 +253,35 @@ define(["helpers"], function(helpers) {
         return this.client.del(helpers.url("/devices/{0}/streams/{1}", id, name), callback, errorCallback);
     };
 
-    // Post multiple values to multiple streams
+    // Post Device Updates (Multiple Values to Multiple Streams)
     //
     // This method allows posting multiple values to multiple streams
-    // belonging to a device. All the streams should be created before
-    // posting values using this method.
+    // belonging to a device and optionally, the device location.
+    //
+    // All the streams should be created before posting values using this method.
+    //
+    // The `values` parameter contains an object with one attribute per each stream to be updated.
+    // The value of each one of these attributes is an array of timestamped values.
+    //
+    //     {
+    //         temperature: [
+    //             { "timestamp": <Time in ISO8601>, "value": x },
+    //             { "timestamp": <Time in ISO8601>, "value": y }
+    //         ],
+    //         humidity:    [
+    //             { "timestamp": <Time in ISO8601>, "value": x },
+    //             { "timestamp": <Time in ISO8601>, "value": y }
+    //         ]
+    //     }
+    //
+    // The optional `location` parameter can contain location information that will
+    // be used to update the current location of the specified device
     //
     // https://m2x.att.com/developer/documentation/v2/device#Post-Device-Updates--Multiple-Values-to-Multiple-Streams-
-    Devices.prototype.postMultiple = function(id, values, callback, errorCallback) {
+    Devices.prototype.postUpdates = function(id, params, callback, errorCallback) {
         return this.client.post(helpers.url("/devices/{0}/updates", id), {
             headers: { "Content-Type": "application/json" },
-            params: { values: values }
+            params:  params
         }, callback, errorCallback);
     };
 
