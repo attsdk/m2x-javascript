@@ -1,14 +1,14 @@
-define(["client", "jobs", "keys", "collections", "devices", "charts", "distributions"],
-function(Client, Jobs, Keys, Collections, Devices, Charts, Distributions) {
+define(["charts", "client", "collections", "devices", "distributions", "jobs", "keys"],
+function(Charts, Client, Collections, Devices, Distributions, Jobs, Keys) {
     var M2X = function(apiKey, apiBase) {
         this.client = new Client(apiKey, apiBase);
 
-        this.jobs = new Jobs(this.client);
-        this.keys = new Keys(this.client);
+        this.charts = new Charts(this.client);
         this.collections = new Collections(this.client, this.keys);
         this.devices = new Devices(this.client, this.keys);
-        this.charts = new Charts(this.client);
         this.distributions = new Distributions(this.client);
+        this.jobs = new Jobs(this.client);
+        this.keys = new Keys(this.client);
     };
 
     M2X.prototype.status = function(callback, errorCallback) {
