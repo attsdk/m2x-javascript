@@ -133,7 +133,7 @@ In order to build this library you will need two things (almond comes included i
 * [node.js](http://nodejs.org/)
 * [require.js](http://requirejs.org/) (`npm install -g requirejs`)
 
-Once you have these installed go to the ``dist/`` directory and run `./build.sh` (make sure the script has execute permissions). If everything goes well you should now have a minified file named `m2x-VERSION.min.js` file and a non-minified version named `m2x-VERSION.js` in the library's root directory.
+Once you have these installed go to the ``dist/`` directory and run `./build.sh` (make sure the script has execute permissions). If everything goes well you should now have a minified file named `m2x-VERSION.min.js` file and a non-minified version named `m2x-VERSION.js` inside the ``dist`` directory.
 
 
 ## Common Errors ##
