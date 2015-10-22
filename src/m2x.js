@@ -1,8 +1,9 @@
-define(["client", "keys", "devices", "charts", "distributions"],
-function(Client, Keys, Devices, Charts, Distributions) {
+define(["client", "jobs", "keys", "devices", "charts", "distributions"],
+function(Client, Jobs, Keys, Devices, Charts, Distributions) {
     var M2X = function(apiKey, apiBase) {
         this.client = new Client(apiKey, apiBase);
 
+        this.jobs = new Jobs(this.client);
         this.keys = new Keys(this.client);
         this.devices = new Devices(this.client, this.keys);
         this.charts = new Charts(this.client);
