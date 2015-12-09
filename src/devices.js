@@ -239,7 +239,7 @@ define(["helpers"], function(helpers) {
     //
     // https://m2x.att.com/developer/documentation/v2/device#Delete-Data-Stream-Values
     Devices.prototype.deleteStreamValues = function(id, name, params, callback, errorCallback) {
-        return this.del(
+        return this.client.del(
             helpers.url("/devices/{0}/streams/{1}/values", id, name),
             { params: params },
             callback, errorCallback
@@ -332,7 +332,7 @@ define(["helpers"], function(helpers) {
     //
     // https://m2x.att.com/developer/documentation/v2/device#Delete-Device
     Devices.prototype.deleteDevice = function(id, callback, errorCallback) {
-        return this.del(helpers.url("/devices/{0}", id), callback, errorCallback);
+        return this.client.del(helpers.url("/devices/{0}", id), callback, errorCallback);
     };
 
     // Returns a list of API keys associated with the device
