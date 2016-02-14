@@ -94,6 +94,19 @@ define(["helpers"], function(helpers) {
         );
     };
 
+    // Return the location history of the supplied device.
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Read-Device-Location-History
+    Devices.prototype.locationHistory = function(id, params, callback, errorCallback) {
+        if (typeof params === "function") {
+            errorCallback = callback;
+            callback = params;
+            params = {};
+        }
+
+        return this.client.get(helpers.url("/devices/{0}/location/waypoints", id), { qs: params }, callback, errorCallback);
+    };
+
     // Return a list of the associated streams for the supplied device
     //
     // https://m2x.att.com/developer/documentation/v2/device#List-Data-Streams
