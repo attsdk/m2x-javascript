@@ -2,7 +2,7 @@
 <html>
   <head>
     <link href="styles.css" type="text/css" rel="stylesheet">
-    <script src="../dist/m2x-2.0.4.js"></script>
+    <script src="../dist/m2x-3.0.1.js"></script>
 
     <!-- Keep in mind that the M2X Client does *not* require jQuery to work,
          but for the purpose of keeping things simple we're using it in this example -->
@@ -43,6 +43,21 @@
 
       <pre><code></code></pre>
       <button>Fetch values</button>
+    </fieldset>
+
+    <fieldset id="send-command">
+      <legend>Send command to device</legend>
+
+      <label>Command name:</label>
+      <input type="text" name="command-name">
+
+      <button>Send Command</button>
+    </fieldset>
+
+    <fieldset id="commands-view">
+      <legend>List device's commands</legend>
+      <pre><code></code></pre>
+      <button>Get</button>
     </fieldset>
 
     <p id="status-bar">Status: <span></span></p>

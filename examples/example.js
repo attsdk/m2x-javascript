@@ -7,6 +7,8 @@
         this.$deviceView = $("#device-view");
         this.$streamPush = $("#stream-push");
         this.$streamView = $("#stream-view");
+        this.$sendCommand = $("#send-command");
+        this.$commandsView = $("#commands-view");
 
         this.bindEvents();
 
@@ -42,6 +44,12 @@
         this.setLoading(false);
     };
 
+    M2XExample.prototype.onReceiveCommandsList = function(data) {
+        $("code", this.$commandsView).text(JSON.stringify(data));
+
+        this.setLoading(false);
+    };
+
     M2XExample.prototype.bindEvents = function() {
         // Call onKeyChange when api key input changes
         this.$apiKey.on("change", $.proxy(this, "onKeyChange"));
@@ -69,6 +77,32 @@
 
             this.m2x.devices.view(this.deviceID,
                 $.proxy(this, "onReceiveDeviceDetails"),
+                $.proxy(this, "handleError")
+            );
+        }, this));
+
+        // Handler for sending command to device
+        this.$sendCommand.on("click", "button", $.proxy(function() {
+            var commandName = $("input[name=command-name]", this.$sendCommand).val();
+
+            if (! commandName) {
+                alert("You must type an Command name first.");
+            } else {
+                this.setLoading(true);
+
+                this.m2x.commands.send({ name: commandName, targets: { devices: [this.deviceID] } },
+                    $.proxy(function() { this.setLoading(false); }, this),
+                    $.proxy(this, "handleError")
+                );
+            }
+        }, this));
+
+        // Handler for getting device's commands list
+        this.$commandsView.on("click", "button", $.proxy(function() {
+            this.setLoading(true);
+
+            this.m2x.devices.commands(this.deviceID,
+                $.proxy(this, "onReceiveCommandsList"),
                 $.proxy(this, "handleError")
             );
         }, this));
