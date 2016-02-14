@@ -1,10 +1,11 @@
 define(["helpers"], function(helpers) {
-  // Wrapper for AT&T M2X Device API
-  //
-  // https://m2x.att.com/developer/documentation/device
-    var Devices = function(client, keysAPI) {
+    // Wrapper for AT&T M2X Device API
+    //
+    // https://m2x.att.com/developer/documentation/device
+    var Devices = function(client, keysAPI, metadata) {
         this.client = client;
         this.keysAPI = keysAPI;
+        this.metadata = metadata;
     };
 
     // List/search the catalog of public devices
@@ -351,6 +352,34 @@ define(["helpers"], function(helpers) {
     // Updates an API key properties
     Devices.prototype.updateKey = function(id, key, params, callback, errorCallback) {
         this.keysAPI.update(key, helpers.extend(params, { device: id }), callback, errorCallback);
+    };
+
+    // Read device metadata
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Read-Device-Metadata
+    Devices.prototype.readMetadata = function(id, callback, errorCallback) {
+        this.metadata.read("devices", id, callback, errorCallback);
+    };
+
+    // Update device metadata
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Update-Device-Metadata
+    Devices.prototype.updateMetadata = function(id, params, callback, errorCallback) {
+        this.metadata.update("devices", id, params, callback, errorCallback);
+    };
+
+    // Read device metadata field
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Read-Device-Metadata-Field
+    Devices.prototype.readMetadataField = function(id, field, callback, errorCallback) {
+        this.metadata.readField("devices", id, field, callback, errorCallback);
+    };
+
+    // Update device metadata field
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Update-Device-Metadata-Field
+    Devices.prototype.updateMetadataField = function(id, field, value, callback, errorCallback) {
+        this.metadata.updateField("devices", id, field, value, callback, errorCallback);
     };
 
     return Devices;

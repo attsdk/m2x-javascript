@@ -2,8 +2,9 @@ define(["helpers"], function(helpers) {
   // Wrapper for AT&T M2X Collections API
   //
   // https://m2x.att.com/developer/documentation/v2/collections
-    var Collections = function(client) {
+    var Collections = function(client, metadata) {
         this.client = client;
+        this.metadata = metadata;
     };
 
   // Retrieve the list of collections accessible by the authenticated API key that
@@ -70,6 +71,34 @@ define(["helpers"], function(helpers) {
     // https://m2x.att.com/developer/documentation/v2/collections#Delete-Collection
     Collections.prototype.deleteCollection = function(id, callback, errorCallback) {
         return this.client.del(helpers.url("/collections/{0}", id), callback, errorCallback);
+    };
+
+    // Read collection metadata
+    //
+    // https://m2x.att.com/developer/documentation/v2/collections#Read-Device-Metadata
+    Collections.prototype.readMetadata = function(id, callback, errorCallback) {
+        this.metadata.read("collections", id, callback, errorCallback);
+    };
+
+    // Update collection metadata
+    //
+    // https://m2x.att.com/developer/documentation/v2/collections#Update-Device-Metadata
+    Collections.prototype.updateMetadata = function(id, params, callback, errorCallback) {
+        this.metadata.update("collections", id, params, callback, errorCallback);
+    };
+
+    // Read collection metadata field
+    //
+    // https://m2x.att.com/developer/documentation/v2/collections#Read-Device-Metadata-Field
+    Collections.prototype.readMetadataField = function(id, field, callback, errorCallback) {
+        this.metadata.readField("collections", id, field, callback, errorCallback);
+    };
+
+    // Update collection metadata field
+    //
+    // https://m2x.att.com/developer/documentation/v2/collections#Update-Device-Metadata-Field
+    Collections.prototype.updateMetadataField = function(id, field, value, callback, errorCallback) {
+        this.metadata.updateField("collections", id, field, value, callback, errorCallback);
     };
 
     return Collections;

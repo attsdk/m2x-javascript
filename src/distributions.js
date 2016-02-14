@@ -2,8 +2,9 @@ define(["helpers"], function(helpers) {
     // Wrapper for AT&T M2X Distribution API
     //
     // https://m2x.att.com/developer/documentation/distribution
-    var Distributions = function(client) {
+    var Distributions = function(client, metadata) {
         this.client = client;
+        this.metadata = metadata;
     };
 
     // Retrieve a list of device distributions
@@ -112,6 +113,34 @@ define(["helpers"], function(helpers) {
             helpers.url("/distributions/{0}/streams/{1}", id, name),
             callback, errorCallback
         );
+    };
+
+    // Read distribution metadata
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Read-Device-Metadata
+    Distributions.prototype.readMetadata = function(id, callback, errorCallback) {
+        this.metadata.read("distributions", id, callback, errorCallback);
+    };
+
+    // Update distribution metadata
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Update-Device-Metadata
+    Distributions.prototype.updateMetadata = function(id, params, callback, errorCallback) {
+        this.metadata.update("distributions", id, params, callback, errorCallback);
+    };
+
+    // Read distribution metadata field
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Read-Device-Metadata-Field
+    Distributions.prototype.readMetadataField = function(id, field, callback, errorCallback) {
+        this.metadata.readField("distributions", id, field, callback, errorCallback);
+    };
+
+    // Update distribution metadata field
+    //
+    // https://m2x.att.com/developer/documentation/v2/distribution#Update-Device-Metadata-Field
+    Distributions.prototype.updateMetadataField = function(id, field, value, callback, errorCallback) {
+        this.metadata.updateField("distributions", id, field, value, callback, errorCallback);
     };
 
     return Distributions;

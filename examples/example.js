@@ -5,6 +5,7 @@
         this.$apiKey = $("input[name=api-key]");
         this.$deviceID = $("input[name=device-id]");
         this.$deviceView = $("#device-view");
+        this.$updateMetadata = $("#update-metadata-field");
         this.$streamPush = $("#stream-push");
         this.$streamView = $("#stream-view");
 
@@ -71,6 +72,25 @@
                 $.proxy(this, "onReceiveDeviceDetails"),
                 $.proxy(this, "handleError")
             );
+        }, this));
+
+        // Handler for updating device metadata field
+        this.$updateMetadata.on("click", "button", $.proxy(function() {
+            var fieldName = $("input[name=field-name]", this.$updateMetadata).val();
+            var fieldValue = $("input[name=field-value]", this.$updateMetadata).val();
+
+            if (! fieldName) {
+                alert("You must type an field name first.");
+            } else if (! fieldValue) {
+                alert("You must type a field value to be updated.");
+            } else {
+                this.setLoading(true);
+
+                this.m2x.devices.updateMetadataField(this.deviceID, fieldName, fieldValue,
+                    $.proxy(function() { this.setLoading(false); }, this),
+                    $.proxy(this, "handleError")
+                );
+            }
         }, this));
 
         // Handler for pushing values to a data stream

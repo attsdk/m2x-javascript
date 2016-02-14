@@ -2,7 +2,7 @@
 <html>
   <head>
     <link href="styles.css" type="text/css" rel="stylesheet">
-    <script src="../dist/m2x-2.0.4.js"></script>
+    <script src="../dist/m2x-3.0.1.js"></script>
 
     <!-- Keep in mind that the M2X Client does *not* require jQuery to work,
          but for the purpose of keeping things simple we're using it in this example -->
@@ -21,6 +21,22 @@
       <legend>Get device information</legend>
       <pre><code></code></pre>
       <button>Get</button>
+    </fieldset>
+
+    <fieldset id="update-metadata-field">
+      <legend>Update device metadata field</legend>
+
+      <label>Field name:</label>
+      <input type="text" name="field-name">
+      <em>Field names must begin with a lowercase letter, may contain only lowercase letters, numbers, and underscores, and may be up to 250 characters long.</em>
+
+
+      <label>Field value:</label>
+      <input type="text" name="field-value">
+      <em>Field values may be any string up to 5,000 characters.</em>
+
+      <br />
+      <button>Update Metadata</button>
     </fieldset>
 
     <fieldset id="stream-push">
