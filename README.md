@@ -145,7 +145,7 @@ If you need help handling errors within the required libraries, please check out
 
 ## License ##
 
-This gem is delivered under the MIT license. See [LICENSE](LICENSE) for the terms.
+This software is provided under the MIT license. See [LICENSE](LICENSE) for the terms.
 
 
 ## Acknowledgements ##
