@@ -1,16 +1,16 @@
 define(["helpers"], function(helpers) {
-  // Wrapper for AT&T M2X Collections API
-  //
-  // https://m2x.att.com/developer/documentation/v2/collections
+    // Wrapper for AT&T M2X Collections API
+    //
+    // https://m2x.att.com/developer/documentation/v2/collections
     var Collections = function(client, metadata) {
         this.client = client;
         this.metadata = metadata;
     };
 
-  // Retrieve the list of collections accessible by the authenticated API key that
-  // meet the search criteria
-  //
-  // https://m2x.att.com/developer/documentation/v2/collections#List-collections
+    // Retrieve the list of collections accessible by the authenticated API key that
+    // meet the search criteria
+    //
+    // https://m2x.att.com/developer/documentation/v2/collections#List-collections
     Collections.prototype.list = function(params, callback, errorCallback) {
         if (typeof params === "function") {
             callback = params;
