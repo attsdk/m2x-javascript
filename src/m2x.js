@@ -6,7 +6,7 @@ function(Charts, Client, Collections, Commands, Devices, Distributions, Jobs, Ke
         this.metadata = new Metadata(this.client);
         this.keys = new Keys(this.client);
         this.charts = new Charts(this.client);
-        this.collections = new Collections(this.client, this.keys, this.metadata);
+        this.collections = new Collections(this.client, this.metadata);
         this.devices = new Devices(this.client, this.keys, this.metadata);
         this.distributions = new Distributions(this.client, this.metadata);
         this.commands = new Commands(this.client);
