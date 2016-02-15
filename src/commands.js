@@ -1,15 +1,15 @@
 define(["helpers"], function(helpers) {
-  // Wrapper for AT&T M2X Commands API
-  //
-  // https://m2x.att.com/developer/documentation/v2/commands
+    // Wrapper for AT&T M2X Commands API
+    //
+    // https://m2x.att.com/developer/documentation/v2/commands
     var Commands = function(client) {
         this.client = client;
     };
 
-  // Retrieve the list of sent commands accessible by the authenticated API key that
-  // meet the search criteria
-  //
-  // https://m2x.att.com/developer/documentation/v2/commands#List-Sent-Commands
+    // Retrieve the list of sent commands accessible by the authenticated API key that
+    // meet the search criteria
+    //
+    // https://m2x.att.com/developer/documentation/v2/commands#List-Sent-Commands
     Commands.prototype.list = function(params, callback, errorCallback) {
         if (typeof params === "function") {
             callback = params;
