@@ -395,5 +395,62 @@ define(["helpers"], function(helpers) {
         this.metadata.updateField("devices", id, field, value, callback, errorCallback);
     };
 
+    // Get device's list of received commands
+    //
+    // https://m2x.att.com/developer/documentation/v2/commands#Device-s-List-of-Received-Commands
+    Devices.prototype.commands = function(id, params, callback, errorCallback) {
+        if (typeof params === "function") {
+            errorCallback = callback;
+            callback = params;
+            params = {};
+        }
+
+        return this.client.get(
+            helpers.url("/devices/{0}/commands", id),
+            { qs: params },
+            callback,
+            errorCallback
+        );
+    };
+
+    // Get device's view of command details
+    //
+    // https://m2x.att.com/developer/documentation/v2/commands#Device-s-View-of-Command-Details
+    Devices.prototype.command = function(deviceId, commandId, callback, errorCallback) {
+        return this.client.get(helpers.url("/devices/{0}/commands/{1}", deviceId, commandId), callback, errorCallback);
+    };
+
+    // Mark command as processed
+    //
+    // https://m2x.att.com/developer/documentation/v2/commands#Device-Marks-a-Command-as-Processed
+    Devices.prototype.processCommand = function(deviceId, commandId, params, callback, errorCallback) {
+        if (typeof params === "function") {
+            errorCallback = callback;
+            callback = params;
+            params = {};
+        }
+
+        return this.client.post(helpers.url("/devices/{0}/commands/{1}/process", deviceId, commandId), {
+            headers: { "Content-Type": "application/json" },
+            params:  params || {}
+        }, callback, errorCallback);
+    };
+
+    // Mark command as rejected
+    //
+    // https://m2x.att.com/developer/documentation/v2/commands#Device-Marks-a-Command-as-Rejected
+    Devices.prototype.rejectCommand = function(deviceId, commandId, params, callback, errorCallback) {
+        if (typeof params === "function") {
+            errorCallback = callback;
+            callback = params;
+            params = {};
+        }
+
+        return this.client.post(helpers.url("/devices/{0}/commands/{1}/reject", deviceId, commandId), {
+            headers: { "Content-Type": "application/json" },
+            params:  params || {}
+        }, callback, errorCallback);
+    };
+
     return Devices;
 });

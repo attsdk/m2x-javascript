@@ -4,11 +4,11 @@ define(["helpers"], function(helpers) {
         this.client = client;
     };
 
-      // Read resource's metadata
-      //
-      // https://m2x.att.com/developer/documentation/v2/device#Read-Device-Metadata
-      // https://m2x.att.com/developer/documentation/v2/distribution#Read-Distribution-Metadata
-      // https://m2x.att.com/developer/documentation/v2/collections#Read-Collection-Metadata
+    // Read resource's metadata
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Read-Device-Metadata
+    // https://m2x.att.com/developer/documentation/v2/distribution#Read-Distribution-Metadata
+    // https://m2x.att.com/developer/documentation/v2/collections#Read-Collection-Metadata
     Metadata.prototype.read = function(resource, id, callback, errorCallback) {
         return this.client.get(helpers.url("/{0}/{1}/metadata", resource, id), callback, errorCallback);
     };
