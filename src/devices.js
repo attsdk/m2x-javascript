@@ -82,18 +82,7 @@ define(["helpers"], function(helpers) {
     Devices.prototype.location = function(id, callback, errorCallback) {
         return this.client.get(helpers.url("/devices/{0}/location", id), callback, errorCallback);
     };
-
-    // Update the current location of the device
-    //
-    // https://m2x.att.com/developer/documentation/v2/device#Update-Device-Location
-    Devices.prototype.updateLocation = function(id, params, callback, errorCallback) {
-        return this.client.put(
-            helpers.url("/devices/{0}/location", id),
-            { params: params },
-            callback, errorCallback
-        );
-    };
-
+    
     // Return the location history of the supplied device.
     //
     // https://m2x.att.com/developer/documentation/v2/device#Read-Device-Location-History
@@ -105,6 +94,17 @@ define(["helpers"], function(helpers) {
         }
 
         return this.client.get(helpers.url("/devices/{0}/location/waypoints", id), { qs: params }, callback, errorCallback);
+    };
+
+    // Update the current location of the device
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Update-Device-Location
+    Devices.prototype.updateLocation = function(id, params, callback, errorCallback) {
+        return this.client.put(
+            helpers.url("/devices/{0}/location", id),
+            { params: params },
+            callback, errorCallback
+        );
     };
 
     // Return a list of the associated streams for the supplied device
