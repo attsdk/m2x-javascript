@@ -97,6 +97,17 @@ define(["helpers"], function(helpers) {
         return this.client.get(helpers.url("/devices/{0}/location/waypoints", id), { qs: params }, callback, errorCallback);
     };
 
+    // Delete the location history of the supplied device.
+    //
+    // https://m2x.att.com/developer/documentation/v2/device#Delete-Location-History
+    Devices.prototype.deleteLocationHistory = function(id, params, callback, errorCallback) {
+        return this.client.del(
+            helpers.url("/devices/{0}/location/waypoints", id),
+            { params: params },
+            callback, errorCallback
+        );
+    };
+
     // Update the current location of the device
     //
     // https://m2x.att.com/developer/documentation/v2/device#Update-Device-Location
