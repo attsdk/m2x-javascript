@@ -10,6 +10,8 @@
         this.$streamView = $("#stream-view");
         this.$sendCommand = $("#send-command");
         this.$commandsView = $("#commands-view");
+        this.$locationHistory = $("#location-history");
+        this.$deleteLocationHistory = $("#delete-location-history");
 
         this.bindEvents();
 
@@ -47,6 +49,12 @@
 
     M2XExample.prototype.onReceiveCommandsList = function(data) {
         $("code", this.$commandsView).text(JSON.stringify(data));
+
+        this.setLoading(false);
+    };
+
+    M2XExample.prototype.onReceiveLocationHistory = function(data) {
+        $("code", this.$locationHistory).text(JSON.stringify(data));
 
         this.setLoading(false);
     };
@@ -125,6 +133,35 @@
                 $.proxy(this, "onReceiveCommandsList"),
                 $.proxy(this, "handleError")
             );
+        }, this));
+
+        // Handler for getting location history
+        this.$locationHistory.on("click", "button", $.proxy(function() {
+            this.setLoading(true);
+
+            this.m2x.devices.locationHistory(this.deviceID,
+                $.proxy(this, "onReceiveLocationHistory"),
+                $.proxy(this, "handleError")
+            );
+        }, this));
+
+        // Handler for deleting the location history
+        this.$deleteLocationHistory.on("click", "button", $.proxy(function() {
+            var fromTime = $("input[name=fromTime]", this.$deleteLocationHistory).val();
+            var endTime = $("input[name=endTime]", this.$deleteLocationHistory).val();
+
+            if (! fromTime) {
+                alert("You must type an from time.");
+            } else if (! endTime) {
+                alert("You must type an end time.");
+            } else {
+                this.setLoading(true);
+
+                this.m2x.devices.deleteLocationHistory(this.deviceID, {from: fromTime, end: endTime},
+                    $.proxy(function() { this.setLoading(false); }, this),
+                    $.proxy(this, "handleError")
+                );
+            }
         }, this));
 
         // Handler for pushing values to a data stream
