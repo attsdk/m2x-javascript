@@ -76,6 +76,28 @@
       <button>Get</button>
     </fieldset>
 
+    <fieldset id="location-history">
+      <legend>Read Location History</legend>
+      <pre><code></code></pre>
+      <button>Read</button>
+    </fieldset>
+
+    <fieldset id="delete-location-history">
+      <legend>Delete Location History</legend>
+
+      <label>From:</label>
+      <input type="datetime" name="fromTime">
+      <em> Timestamp must be in ISO8601 format Ex: 2014-09-09T19:15:00.624Z </em>
+
+
+      <label>End:</label>
+      <input type="datetime" name="endTime">
+      <em> Timestamp must be in ISO8601 format Ex: 2014-09-09T19:15:00.624Z </em>
+
+      <br />
+      <button>Delete Location History</button>
+    </fieldset>
+
     <p id="status-bar">Status: <span></span></p>
   </body>
 </html>
