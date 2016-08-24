@@ -101,5 +101,15 @@ define(["helpers"], function(helpers) {
         this.metadata.updateField("collections", id, field, value, callback, errorCallback);
     };
 
+    //Add device to collection
+    Collections.prototype.addDeviceToCollection = function(id, field, callback, errorCallback) {
+        return this.client.put(helpers.url("/collections/{0}/devices/{1}", id, field), callback, errorCallback);
+    };
+
+    //Remove device from collection
+    Collections.prototype.removeFromCollection = function(id, field, callback, errorCallback) {
+        return this.client.del(helpers.url("/collections/{0}/devices/{1}", id, field), callback, errorCallback);
+    };
+
     return Collections;
 });
